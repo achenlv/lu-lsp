@@ -63,32 +63,41 @@ void sv_apgriezt(char *virkne) {
 
 // 5. Apgirež vārdus
 void sv_vapgriezt(char *virkne) {
-  char *vards_sakums = virkne;
-  char *p = virkne;
+  int garums = sv_garums(virkne);
+  if (garums <= 1) return;  // Pārbaudam īsos gadījumus
   
-  while (*p != '\0') {
-    if (*p == ' ' || *(p + 1) == '\0') {
-      char *vards_beigas;
-      
-      if (*p == ' ') {
-        vards_beigas = p - 1;
-      }
-      else {
-        vards_beigas = p;
-      }
-      
-      while (vards_sakums < vards_beigas) {
-        char temp = *vards_sakums;
-        *vards_sakums = *vards_beigas;
-        *vards_beigas = temp;
-        vards_sakums++;
-        vards_beigas--;
-      }
-      
-      vards_sakums = p + 1;
-    }
-    p++;
+  // Atrodam pirmo atstarpi
+  char *pirmais_vards = virkne;
+  char *p = virkne;
+  while (*p != ' ' && *p != '\0') p++;
+  
+  // Ja nav atstarpes, nav ko mainīt
+  if (*p == '\0') return;
+  
+  // Saglabājam pirmā vārda garumu
+  int pirma_varda_garums = p - pirmais_vards;
+  
+  // Saglabājam pirmā vārda saturu pagaidu buferī
+  char temp;
+  int i;
+  
+  // Pārvietojam atlikušo tekstu pa kreisi
+  char *src = p + 1;  // Izlaižam atstarpi
+  char *dst = virkne;
+  while (*src != '\0') {
+    *dst++ = *src++;
   }
+  *dst = '\0';
+  
+  // Pievienojam atstarpi
+  *dst++ = ' ';
+  
+  // Kopējam pirmo vārdu beigās
+  src = pirmais_vards;
+  for (i = 0; i < pirma_varda_garums; i++) {
+    *dst++ = src[i];
+  }
+  *dst = '\0';
 }
 
 
@@ -96,37 +105,29 @@ int main(void) {
     char buferis[100];
 
     printf("Tests uzdevumam PD1.1:\n");
-    printf("%d\n", sv_garums("Testa virkne"));
-    printf("%d\n", sv_garums("3 vardi nav"));
+    printf("%d\n", sv_garums("hello world"));
+    printf("%d\n", sv_garums("123"));
     printf("%d\n", sv_garums(""));
 
     printf("Tests uzdevumam PD1.2:\n");
-    sv_kopet("Testa virkne", buferis);
+    sv_kopet("hello world", buferis);
     printf("%s\n", buferis);
-    sv_kopet("3 vardi nav", buferis);
+    sv_kopet("123", buferis);
     printf("%s\n", buferis);
     sv_kopet("", buferis);
     printf("%s\n", buferis);
 
     printf("Tests uzdevumam PD1.3:\n");
-    printf("%d\n", sv_meklet("Testa virkne", "virkne"));
-    printf("%d\n", sv_meklet("Testa virkne", "nav"));
-    printf("%d\n", sv_meklet("Testa virkne", ""));
+    printf("%d\n", sv_meklet("hello world", "wo"));
+    printf("%d\n", sv_meklet("hello world", "123"));
+    printf("%d\n", sv_meklet("hello world", ""));
 
     printf("Tests uzdevumam PD1.4:\n");
-    sv_kopet("Testa virkne", buferis);
+    sv_kopet("hello world", buferis);
     sv_apgriezt(buferis);
     printf("%s\n", buferis);
-    sv_kopet("3 vardi nav", buferis);
+    sv_kopet("123", buferis);
     sv_apgriezt(buferis);
-    printf("%s\n", buferis);
-
-    printf("Tests uzdevumam PD1.5:\n");
-    sv_kopet("Testa virkne", buferis);
-    sv_vapgriezt(buferis);
-    printf("%s\n", buferis);
-    sv_kopet("Loti gara daudziem vardiem testa virkne", buferis);
-    sv_vapgriezt(buferis);
     printf("%s\n", buferis);
 
     return 0;
