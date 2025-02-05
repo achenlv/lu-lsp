@@ -61,46 +61,6 @@ void sv_apgriezt(char *virkne) {
   }
 }
 
-// 5. Apgirež vārdus
-void sv_vapgriezt(char *virkne) {
-  int garums = sv_garums(virkne);
-  if (garums <= 1) return;  // Pārbaudam īsos gadījumus
-  
-  // Atrodam pirmo atstarpi
-  char *pirmais_vards = virkne;
-  char *p = virkne;
-  while (*p != ' ' && *p != '\0') p++;
-  
-  // Ja nav atstarpes, nav ko mainīt
-  if (*p == '\0') return;
-  
-  // Saglabājam pirmā vārda garumu
-  int pirma_varda_garums = p - pirmais_vards;
-  
-  // Saglabājam pirmā vārda saturu pagaidu buferī
-  char temp;
-  int i;
-  
-  // Pārvietojam atlikušo tekstu pa kreisi
-  char *src = p + 1;  // Izlaižam atstarpi
-  char *dst = virkne;
-  while (*src != '\0') {
-    *dst++ = *src++;
-  }
-  *dst = '\0';
-  
-  // Pievienojam atstarpi
-  *dst++ = ' ';
-  
-  // Kopējam pirmo vārdu beigās
-  src = pirmais_vards;
-  for (i = 0; i < pirma_varda_garums; i++) {
-    *dst++ = src[i];
-  }
-  *dst = '\0';
-}
-
-
 int main(void) {
     char buferis[100];
 
