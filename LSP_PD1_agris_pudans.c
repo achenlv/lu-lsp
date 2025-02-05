@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdlib.h> 
+// #include <stdlib.h> 
 
 // 1. Atrod simbolu virknes garumu
 int sv_garums(char *virkne) {
