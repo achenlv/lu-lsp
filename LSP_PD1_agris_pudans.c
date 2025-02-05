@@ -66,18 +66,17 @@ void sv_vapgriezt(char *virkne) {
   char *vards_sakums = virkne;
   char *p = virkne;
   
-  // Tagad apgriežam katru vārdu atsevišķi
   while (*p != '\0') {
     if (*p == ' ' || *(p + 1) == '\0') {
       char *vards_beigas;
       
       if (*p == ' ') {
         vards_beigas = p - 1;
-      } else {
+      }
+      else {
         vards_beigas = p;
       }
       
-      // Apgriežam individuālo vārdu
       while (vards_sakums < vards_beigas) {
         char temp = *vards_sakums;
         *vards_sakums = *vards_beigas;
@@ -93,45 +92,42 @@ void sv_vapgriezt(char *virkne) {
 }
 
 
-int main() {
-  printf("LSP 1. praktiskais darbs\n");
-  printf("Agris Pudāns\n");
-  printf("St. apl. nr. ap08426\n");
+int main(void) {
+    char buferis[100];
 
-  printf("\n--- TESTA PIEMĒRI ---\n");
-  printf("-------------------------------\n");
-  char virkne[] = "Simbolu virknes testa piemers";
+    printf("Tests uzdevumam PD1.1:\n");
+    printf("%d\n", sv_garums("Testa virkne"));
+    printf("%d\n", sv_garums("3 vardi nav"));
+    printf("%d\n", sv_garums(""));
 
-  printf("1. Atrod simbolu virknes garumu\n");
-  printf("Virknes '%s' garums: %d\n", virkne, sv_garums(virkne));
+    printf("Tests uzdevumam PD1.2:\n");
+    sv_kopet("Testa virkne", buferis);
+    printf("%s\n", buferis);
+    sv_kopet("3 vardi nav", buferis);
+    printf("%s\n", buferis);
+    sv_kopet("", buferis);
+    printf("%s\n", buferis);
 
-  printf("-------------------------------\n");
-  printf("2. Nokopē simbolu virkni bez papildu mainīgajiem\n");
-  char *kopija = (char *)malloc((sv_garums(virkne) + 1) * sizeof(char));
-  sv_kopet(virkne, kopija);
-  printf("Oriģināls: '%s' \nKopija: '%s'\n", virkne, kopija);
-  free(kopija);
+    printf("Tests uzdevumam PD1.3:\n");
+    printf("%d\n", sv_meklet("Testa virkne", "virkne"));
+    printf("%d\n", sv_meklet("Testa virkne", "nav"));
+    printf("%d\n", sv_meklet("Testa virkne", ""));
 
-  printf("-------------------------------\n");
-  printf("3. Meklē apakšvirkni\n");
-  char meklet[] = "test";
-  printf("Tekstā '%s' meklējam '%s'\n", virkne, meklet);
-  printf("Atrašanās pozīcija: %d\n", sv_meklet(virkne, meklet));
+    printf("Tests uzdevumam PD1.4:\n");
+    sv_kopet("Testa virkne", buferis);
+    sv_apgriezt(buferis);
+    printf("%s\n", buferis);
+    sv_kopet("3 vardi nav", buferis);
+    sv_apgriezt(buferis);
+    printf("%s\n", buferis);
 
-  printf("-------------------------------\n");
-  printf("4. Apgriež simbolu virkni\n");
-  printf("Pirms apgriešanas: '%s'\n", virkne);
-  sv_apgriezt(virkne);
-  printf("Pēc apgriešanas: '%s'\n", virkne);
+    printf("Tests uzdevumam PD1.5:\n");
+    sv_kopet("Testa virkne", buferis);
+    sv_vapgriezt(buferis);
+    printf("%s\n", buferis);
+    sv_kopet("Loti gara daudziem vardiem testa virkne", buferis);
+    sv_vapgriezt(buferis);
+    printf("%s\n", buferis);
 
-  printf("-------------------------------\n");
-  printf("5. Apgirež vārdus\n");
-  
-  virkne[] = "Simbolu virknes testa piemers";
-  sv_vapgriezt(virkne);
-  printf("Pēc apgriešanas: '%s'\n", virkne);
-
-
-  printf ("-------------------------------\n");
-  return 0;
+    return 0;
 }
