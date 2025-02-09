@@ -16,8 +16,9 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  FILE *dest = NULL;
-  if (access(argv[2], F_OK) == 0) {
+  FILE *dest = fopen(argv[2], "rb");
+  if (dest) {
+    fclose(dest);
     char response;
     printf("Izvades fails jau eksistē. Vai tiešām pārrakstīt? (j/n) ");
     response = getchar();
@@ -29,31 +30,19 @@ int main(int argc, char *argv[]) {
 
   dest = fopen(argv[2], "wb");
   if (!dest) {
-    fprintf(stderr, "Error: Cannot create destination file\n");
+    fprintf(stderr, "Error: Cannot open destination file\n");
     fclose(source);
     return -1;
   }
 
-  unsigned char buffer[BUFFER_SIZE];
-  size_t bytes_read;
-
-  while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, source)) > 0) {
-    if (fwrite(buffer, 1, bytes_read, dest) != bytes_read) {
-      fprintf(stderr, "Error: Write failed\n");
-      fclose(source);
-      fclose(dest);
-      return -1;
-    }
-  }
-
-  if (ferror(source)) {
-    fprintf(stderr, "Error: Read failed\n");
-    fclose(source);
-    fclose(dest);
-    return -1;
+  char buffer[BUFFER_SIZE];
+  size_t bytesRead;
+  while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, source)) > 0) {
+    fwrite(buffer, 1, bytesRead, dest);
   }
 
   fclose(source);
   fclose(dest);
+
   return 0;
 }
