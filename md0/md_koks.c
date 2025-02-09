@@ -15,6 +15,16 @@
  * (o) topological sorting - lai sakārtotu grafu pēc vecākā elementa
  * (o) depth-first search (DFS) - lai atrastu iespējamo ciklu 
  * (!) varbūt vēl kaut ko citu kļūdu noteikšanai
+ * 
+ * TODO:
+ * - Ielasīt datus no ievada un izveidot grafu
+ * - Izdrukāt grafu (pēc tam arī secībā)
+ * - Sakārtot grafu
+ * - Noteikt ciklus
+ * - Noteikt dublējumus (>1 mātes/tēvi)
+ * - 
+ * 
+ * 
  ***********************************************/
 #include <stdio.h>
 #include <stdlib.h>
