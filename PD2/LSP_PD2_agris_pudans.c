@@ -1,3 +1,8 @@
+/*
+pārveidot visu
+
+
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,13 +11,13 @@
 
 int main(int argc, char *argv[]) {
   if (argc != 3) {
-    fprintf(stderr, "Usage: %s <source> <destination>\n", argv[0]);
+    fprintf(stderr, "Izmantošana: %s <ievads> <izeja>\n", argv[0]);
     return -1;
   }
 
   FILE *source = fopen(argv[1], "rb");
   if (!source) {
-    fprintf(stderr, "Error: Cannot open source file\n");
+    fprintf(stderr, "Kļūda: Nav ievada faila\n");
     return -1;
   }
 
@@ -30,7 +35,7 @@ int main(int argc, char *argv[]) {
 
   dest = fopen(argv[2], "wb");
   if (!dest) {
-    fprintf(stderr, "Error: Cannot open destination file\n");
+    fprintf(stderr, "Kļūda: Nav izejas faila\n");
     fclose(source);
     return -1;
   }
