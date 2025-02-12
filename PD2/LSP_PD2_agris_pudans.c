@@ -1,13 +1,14 @@
 /*
-pārveidot visu
+Agris Pudāns
+st. apl. nr. ap08426
 
-
+PD2 - Darbs ar failiem
 */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define BUFFER_SIZE 65536
+#define BUFFER_SIZE 16384
 
 int main(int argc, char *argv[]) {
   if (argc != 3) {
@@ -25,7 +26,7 @@ int main(int argc, char *argv[]) {
   if (dest) {
     fclose(dest);
     char response;
-    printf("Izvades fails jau eksistē. Vai tiešām pārrakstīt? (j/n) ");
+    printf("Brīdinajums: Izvades fails jau eksistē. Vai tiešām pārrakstīt? (j/n) ");
     response = getchar();
     if (response != 'j') {
       fclose(source);
@@ -43,7 +44,10 @@ int main(int argc, char *argv[]) {
   char buffer[BUFFER_SIZE];
   size_t bytesRead;
   while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, source)) > 0) {
-    fwrite(buffer, 1, bytesRead, dest);
+    if ( fwrite(buffer, 1, bytesRead, dest) != bytesRead ) {
+      fprintf(stderr, "Kļūda: Nevar ierakstīt datus izejas failā\n");
+      return -1;
+    }
   }
 
   fclose(source);
