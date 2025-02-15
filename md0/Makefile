@@ -1,16 +1,11 @@
-all:
-  gcc -Wall -Wextra -Werror -o md_koks.out LSP_PD2_agris_pudans.c
+CC = gcc
+CFLAGS = -Wall -Wextra -Werror -std=c90 -pedantic
 
-test:
-  ./md_koks.out test.in test.out
-  diff -s test.in test.out
+all: md_koks
 
-  ./md_koks.out test-big.in test-big.out
-  diff -s test-big.in test-big.out
-
-gentest:
-  dd if=/dev/urandom of=test.in count=2048
-  dd if=/dev/urandom of=test-big.in count=2048 bs=100
+md_koks: md_koks.c
+	$(CC) $(CFLAGS) -o $@ $<
+	# gcc -o md_koks.out md_koks.c
 
 clean:
   rm -f md_koks.out
