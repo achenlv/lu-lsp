@@ -63,7 +63,6 @@ void parseInput(PersonTable* table) {
     }
 }
 
-
 // 3. grafu izveide
 typedef struct Node {
     char name[MAX_NAME_LENGTH];
@@ -141,34 +140,34 @@ void printResults(Graph* graph) {
 
 // 6. klūdu apstrāde
 int detectCycleUtil(Node* node, int* visited, int* recStack) {
-  if (!visited[node->name[0] - 'A']) {
-      visited[node->name[0] - 'A'] = 1;
-      recStack[node->name[0] - 'A'] = 1;
+    if (!visited[node->name[0] - 'A']) {
+        visited[node->name[0] - 'A'] = 1;
+        recStack[node->name[0] - 'A'] = 1;
 
-      Node* temp = node->next;
-      while (temp) {
-          if (!visited[temp->name[0] - 'A'] && detectCycleUtil(temp, visited, recStack)) {
-              return 1;
-          } else if (recStack[temp->name[0] - 'A']) {
-              return 1;
-          }
-          temp = temp->next;
-      }
-  }
-  recStack[node->name[0] - 'A'] = 0;
-  return 0;
+        Node* temp = node->next;
+        while (temp) {
+            if (!visited[temp->name[0] - 'A'] && detectCycleUtil(temp, visited, recStack)) {
+                return 1;
+            } else if (recStack[temp->name[0] - 'A']) {
+                return 1;
+            }
+            temp = temp->next;
+        }
+    }
+    recStack[node->name[0] - 'A'] = 0;
+    return 0;
 }
 
 int detectCycle(Graph* graph) {
-  int visited[MAX_PERSONS] = {0};
-  int recStack[MAX_PERSONS] = {0};
+    int visited[MAX_PERSONS] = {0};
+    int recStack[MAX_PERSONS] = {0};
 
-  for (int i = 0; i < graph->count; i++) {
-      if (detectCycleUtil(graph->nodes[i], visited, recStack)) {
-          return 1;
-      }
-  }
-  return 0;
+    for (int i = 0; i < graph->count; i++) {
+        if (detectCycleUtil(graph->nodes[i], visited, recStack)) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int main() {
