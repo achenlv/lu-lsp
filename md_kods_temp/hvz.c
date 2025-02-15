@@ -103,7 +103,7 @@ void addEdge(Graph* graph, const char* parent, const char* child) {
 }
 
 // 4. topoloģiskā kārtošana un ciklu dtekcija
-void topologicalSortUtil(Node* node, int* visited, int* stack, int* stackIndex) {
+void topologicalSortUtil(Node* node, int* visited, char stack[MAX_PERSONS][MAX_NAME_LENGTH], int* stackIndex) {
     visited[node->name[0] - 'A'] = 1;
 
     Node* temp = node->next;
@@ -114,12 +114,12 @@ void topologicalSortUtil(Node* node, int* visited, int* stack, int* stackIndex) 
         temp = temp->next;
     }
 
-    stack[(*stackIndex)++] = node->name[0] - 'A';
+    strncpy(stack[(*stackIndex)++], node->name, MAX_NAME_LENGTH);
 }
 
 void topologicalSort(Graph* graph) {
     int visited[MAX_PERSONS] = {0};
-    int stack[MAX_PERSONS];
+    char stack[MAX_PERSONS][MAX_NAME_LENGTH];
     int stackIndex = 0;
 
     for (int i = 0; i < graph->count; i++) {
@@ -129,7 +129,7 @@ void topologicalSort(Graph* graph) {
     }
 
     for (int i = stackIndex - 1; i >= 0; i--) {
-        printf("%c\n", stack[i] + 'A');
+        printf("%s\n", stack[i]);
     }
 }
 
