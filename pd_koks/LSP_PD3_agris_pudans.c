@@ -12,84 +12,55 @@ PD3 -- Direktoriju koka apstaigāšana
 
 #define MAX_PATH 256
 
-void search_files(const char *filename, const char *basedir, const char *curdir) {
-  DIR *dir;
-  struct dirent *entry;
-  char path[MAX_PATH];
-  struct stat statbuf;
-  size_t baselen, curlen;
-
-  /* Atveram direktoriju */
-  dir = opendir(curdir);
-  if (dir == NULL) {
-    return;
-  }
-
-  /* Iegūstam ceļu garumus */
-  baselen = strlen(basedir);
-  curlen = strlen(curdir);
-
-  /* Lasām direktorijas saturu */
-  while ((entry = readdir(dir)) != NULL) {
-    /* Izlaižam . un .. */
-    if (strcmp(entry->d_name, ".") == 0 || 
-        strcmp(entry->d_name, "..") == 0) {
-      continue;
-    }
-
-    /* Veidojam pilno ceļu */
-    if (curlen + strlen(entry->d_name) + 2 > MAX_PATH) {
-      continue;
-    }
-    strcpy(path, curdir);
-    if (path[curlen - 1] != '/') {
-      strcat(path, "/");
-    }
-    strcat(path, entry->d_name);
-
-    /* Pārbaudām vai šis ir meklētais fails */
-    if (strcmp(entry->d_name, filename) == 0) {
-      /* Izvadām relatīvo ceļu */
-      if (strcmp(curdir, basedir) == 0) {
-        printf("./%s\n", entry->d_name);
-      } else {
-        printf("%s/%s\n", curdir + baselen + 1, entry->d_name);
-      }
-    }
-
-    /* Ja šī ir direktorija, turpinām meklēšanu tajā */
-    if (lstat(path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
-      search_files(filename, basedir, path);
-    }
-  }
-
-  closedir(dir);
-}
-
 void meklet(const char *filename, const char *basedir) {
   DIR *d;
   struct dirent *de;
   char path[MAX_PATH];
   struct stat statbuf;
-  size_t len;
 
+  /* Atveram direktoriju */
   d = opendir(basedir);
-  while ( (de = readdir(d)) != NULL ) {
+  if (d == NULL) {
+    return;
+  }
+
+  /* Lasām direktorijas saturu */
+  while ((de = readdir(d)) != NULL) {
+    /* Izlaižam . un .. */
     if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0) {
       continue;
     }
+
+    /* Veidojam pilno ceļu */
+    if (strlen(basedir) + strlen(de->d_name) + 2 > MAX_PATH) {
+      continue;
+    }
+    
+    strcpy(path, basedir);
+    if (path[strlen(basedir) - 1] != '/') {
+      strcat(path, "/");
+    }
+    strcat(path, de->d_name);
+
+    /* Izvada, ja fails ir meklētais */
+    if (strcmp(de->d_name, filename) == 0) {
+      if (strcmp(basedir, ".") == 0) {
+        printf("./%s\n", de->d_name);
+      } else {
+        /* Ja ceļš sākas ar basedir, noņemam to un pievienojam ./ */
+        if (strncmp(path, basedir, strlen(basedir)) == 0) {
+          printf(".%s\n", path + strlen(basedir));
+        }
+      }
+    }
+
+    /* Rekursīvi iet tālāk apakšdirektorijās */
+    if (lstat(path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
+      meklet(filename, path);
+    }
   }
 
-  /* Izvada, ja fails ir meklētais? */
-  if (strcmp(de->d_name, filename) == 0) {
-    printf("./%s\n", de->d_name);
-  }
-
-  /* Rekursīvi iet tālāk apakšdirektorijās */
-  if (lstat(path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
-    meklet(filename, basedir);
-  }
-
+  closedir(d);
 }
 
 int main(int argc, char *argv[]) {
@@ -108,7 +79,8 @@ int main(int argc, char *argv[]) {
   }
 
   /* Sākam meklēšanu */
-  meklet(argv[1], argv[2]);
+   meklet(argv[1], argv[2]); 
 
+   
   return 0;
 }
