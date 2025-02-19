@@ -26,8 +26,10 @@ void meklet(const char *filename, const char *basedir, const char *initdir) {
 
   /* Lasām direktorijas saturu */
   while ( (de = readdir(d)) != NULL ) {
-    /* Izlaižam . un .. , lai izvairītos no ieciklošanās */
-    if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0) {
+    /* Izlaižam . un .. un softlinks, lai izvairītos no ieciklošanās */
+    if (strcmp(de->d_name, ".") == 0 || 
+        strcmp(de->d_name, "..") == 0 ||
+        S_ISLNK(statbuf.st_mode)) {
       continue;
     }
 
@@ -60,7 +62,7 @@ void meklet(const char *filename, const char *basedir, const char *initdir) {
       }
       /* Rekursīvi ejam pa īstajām direktorijām */
       if (S_ISDIR(statbuf.st_mode)) {
-        meklet(filename, path, initial_dir);
+        meklet(filename, path, initdir);
       }
     }
   }
@@ -68,59 +70,6 @@ void meklet(const char *filename, const char *basedir, const char *initdir) {
   closedir(d);
 }
 
-
-void meklet2(const char *filename, const char *basedir, const char *initial_dir) {
-  DIR *d;
-  struct dirent *de;
-  char path[MAX_PATH];
-  struct stat statbuf;
-
-  /* Atveram direktoriju */
-  d = opendir(basedir);
-  if (d == NULL) {
-    return;
-  }
-
-  /* Lasām direktorijas saturu */
-  while ((de = readdir(d)) != NULL) {
-    /* Veidojam pilno ceļu */
-    if (strlen(basedir) + strlen(de->d_name) + 2 > MAX_PATH) {
-      continue;
-    }
-    
-    strcpy(path, basedir);
-    if (path[strlen(basedir) - 1] != '/') {
-      strcat(path, "/");
-    }
-    strcat(path, de->d_name);
-
-    /* Pārbaudām faila tipu */
-    if (lstat(path, &statbuf) != 0) {
-      continue;
-    }
-
-    /* Izlaižam . un .. un vājās saites */
-    if (strcmp(de->d_name, ".") == 0 || 
-        strcmp(de->d_name, "..") == 0 ||
-        S_ISLNK(statbuf.st_mode)) {
-      continue;
-    }
-
-    /* Izvada, ja fails ir meklētais */
-    if (strcmp(de->d_name, filename) == 0) {
-      const char *rel_path = path + strlen(initial_dir);
-      if (*rel_path == '/') rel_path++;
-      printf("%s\n", rel_path);
-    }
-
-    /* Rekursīvi iet tālāk apakšdirektorijās */
-    if (S_ISDIR(statbuf.st_mode)) {
-      meklet(filename, path, initial_dir);
-    }
-  }
-
-  closedir(d);
-}
 
 int main(int argc, char *argv[]) {
   struct stat statbuf;
