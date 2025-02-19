@@ -1,9 +1,3 @@
-/*
-Agris Pudāns
-st. apl. nr. ap08426
-
-PD3 -- Direktoriju koka apstaigāšana
-*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> 
