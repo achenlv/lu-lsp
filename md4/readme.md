@@ -32,5 +32,4 @@ Darbs iesūtāms kursa serverī, direktorijā md_mem.
 Iesūtāmi sekojoši faili:
 
 *  md_mem.c programmas pirmkodu, kura mēra maksimālo pieejamo atmiņas daudzumu.
-*  md_mem_100.c programmas pirmkodu, kura rezervē 100MB atmiņas.
 *  apraksts.pdf īss apraksts un atbildes uz jautājumiem. nepieciešamības gadījumā dokumentā var iekļaut ekrānšāviņus.
