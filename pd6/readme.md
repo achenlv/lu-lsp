@@ -10,12 +10,12 @@ Uzrakstīt programmu, kas rezervē atmiņu (drīkst to pēc tam neatbrīvot). Pr
 
 int main(void)
 {
-        printf("allocating...\n");
+  printf("allocating...\n");
 
-        // ...
+  // ...
 
-        printf("done\n");
-        return 0;
+  printf("done\n");
+  return 0;
 }
 ```
 
