@@ -8,58 +8,36 @@
 /*
 ## Izpildes piemērs uz asm1 servera:
 ---
-
 1. eksperiments. Rezervēju atmiņu ar malloc()...
 --------------------------------
 100 MB rezervēšana ar malloc:
-Sistēmas laiks: 0.064721 sekundes
-Lietotāja laiks: 0.012147 sekundes
-Kopējais laiks: 0.076868 sekundes
+Sistēmas laiks: 0.000000 sekundes
+Lietotāja laiks: 0.000612 sekundes
+Kopējais laiks: 0.000612 sekundes
 --------------------------------
-Veiksmīgi rezervēts 1000 MB
-Veiksmīgi rezervēts 2000 MB
-Veiksmīgi rezervēts 2210 MB
-Veiksmīgi rezervēts 2220 MB
-Veiksmīgi rezervēts 2230 MB
-Veiksmīgi rezervēts 2240 MB
-Veiksmīgi rezervēts 2250 MB
-Veiksmīgi rezervēts 2260 MB
-Veiksmīgi rezervēts 2270 MB
-
+Veiksmīgi rezervēts 3831 MB
 2. eksperiments. Rezervēju atmiņu ar mmap()...
 --------------------------------
 100 MB rezervēšana ar mmap:
-Sistēmas laiks: 0.102177 sekundes
-Lietotāja laiks: 0.006796 sekundes
-Kopējais laiks: 0.108973 sekundes
+Sistēmas laiks: 0.000136 sekundes
+Lietotāja laiks: 0.000034 sekundes
+Kopējais laiks: 0.000170 sekundes
 --------------------------------
-Veiksmīgi rezervēts 1000 MB
-Veiksmīgi rezervēts 2000 MB
-Veiksmīgi rezervēts 2210 MB
-Veiksmīgi rezervēts 2220 MB
-Veiksmīgi rezervēts 2230 MB
-Veiksmīgi rezervēts 2240 MB
-Veiksmīgi rezervēts 2250 MB
-Veiksmīgi rezervēts 2260 MB
-Veiksmīgi rezervēts 2270 MB
-
+Veiksmīgi rezervēts 3831 MB
 3. eksperiments. Rezervēju atmiņu ar sbrk()...
 --------------------------------
-100 MB rezervēšana ar malloc:
-Sistēmas laiks: 0.085103 sekundes
-Lietotāja laiks: 0.010252 sekundes
-Kopējais laiks: 0.095355 sekundes
+100 MB rezervēšana ar sbrk:
+Sistēmas laiks: 0.000032 sekundes
+Lietotāja laiks: 0.000000 sekundes
+Kopējais laiks: 0.000032 sekundes
 --------------------------------
-Veiksmīgi rezervēts 1000 MB
-Veiksmīgi rezervēts 2000 MB
-Veiksmīgi rezervēts 2210 MB
-Veiksmīgi rezervēts 2220 MB
-Veiksmīgi rezervēts 2230 MB
-Veiksmīgi rezervēts 2240 MB
-Veiksmīgi rezervēts 2250 MB
-Veiksmīgi rezervēts 2260 MB
-Veiksmīgi rezervēts 2270 MB
-
+Veiksmīgi rezervēts 37398901 MB
+================================
+Programmas izpildes laiks:
+Sistēmas laiks: 8.788944 sekundes
+Lietotāja laiks: 1.849708 sekundes
+Kopējais laiks: 10.638652 sekundes
+================================
 ---
 
 ## Atruna
@@ -67,12 +45,6 @@ Veiksmīgi rezervēts 2270 MB
 Programma ir pildīta uz asm1 servera. Es necentos noskaidrot, kādi ierobežojumi, kur un kāpēc ir uzstādīti šajā serverī.
 
 ## Secinājumi
-
-1. Programma apstājas katras rezervācijas veida funkcijas izpildes laikā. Visdrīzāk ar OOM (Killed). Bet pārliecināties par to īsti nevaru. 
-Katrs veids maksimāli atļauj rezervēt mazliet vairāk par 2270 MB. Tāpēc nevar pateikt, ka kāds no tiem atļāva rezervēt vairāk par citiem.
-
-Visātrākais veids ir atmiņas rezervēšana ar malloc, ja skatās kopējo sistēmas un lietotāja laiku.
-Ātrākais lietotāja laiks ir ar mmap.
 
 
 */
@@ -94,34 +66,29 @@ Visātrākais veids ir atmiņas rezervēšana ar malloc, ja skatās kopējo sist
 
 
 /* Funkcija atmiņas rezervēšanai ar malloc() */
-void allocate_with_malloc2() {
-  size_t mb_count = 0;
-  char **chunks;
+int allocate_with_malloc(void) {
+  int mb_count = 0;
+  size_t total_allocated = 0;
+  void *ptr = NULL;
 
   struct rusage usage_start, usage_end;
   struct timeval sys_start, sys_end, usr_start, usr_end;
   double sys_time, usr_time;
-  
-
-  /* Pieņemam, ka nepārsniegsim 100 GB */
-  chunks = (char **)malloc(100000 * sizeof(char *)); 
   
   getrusage(RUSAGE_SELF, &usage_start);
   usr_start = usage_start.ru_utime;
   sys_start = usage_start.ru_stime;
 
   while (1) {
-    chunks[mb_count] = (char *)malloc(MB);
-
     /* Pie rezervētiem 100 MB saskaitam laiku */
     if (mb_count == 100) {
       getrusage(RUSAGE_SELF, &usage_end);
       usr_end = usage_end.ru_utime;
       sys_end = usage_end.ru_stime;
-      usr_time = (usr_end.tv_sec - usr_start.tv_sec) +
-                (usr_end.tv_usec - usr_start.tv_usec) / 1000000.0;
-      sys_time = (sys_end.tv_sec - sys_start.tv_sec) +
-                (sys_end.tv_usec - sys_start.tv_usec) / 1000000.0;
+      usr_time =  (usr_end.tv_sec - usr_start.tv_sec) +
+                  (usr_end.tv_usec - usr_start.tv_usec) / 1000000.0;
+      sys_time =  (sys_end.tv_sec - sys_start.tv_sec) +
+                  (sys_end.tv_usec - sys_start.tv_usec) / 1000000.0;
       printf("--------------------------------\n");    
       printf("100 MB rezervēšana ar malloc:\n");            
       printf("Sistēmas laiks: %.6f sekundes\n", sys_time);
@@ -129,55 +96,40 @@ void allocate_with_malloc2() {
       printf("Kopējais laiks: %.6f sekundes\n", sys_time + usr_time);
       printf("--------------------------------\n");    
     }
-
-    memset(chunks[mb_count], 1, MB);
-    
-    mb_count++;
-    
-    /* Ik pa laikam izvadām statusu */
-    if (mb_count % 1000 == 0 || mb_count % 10 == 0 && mb_count > 2200) {
-      printf("Veiksmīgi rezervēts %lu MB\n", (unsigned long)mb_count);
+    ptr = malloc(total_allocated + MB);
+    if (ptr == NULL) {
+      break;
     }
-  }
-  
+    total_allocated += MB;
+    mb_count++;
 
-  /* Atbrīvojam atmiņu, lai varētu testēt nākamo metodi /
-  while (mb_count > 0) {
-    mb_count--;
-    free(chunks[mb_count]);
   }
-  free(chunks); */
+  return mb_count;
 }
 
 /* Funkcija atmiņas rezervēšanai ar mmap() */
-void allocate_with_mmap2() {
-  size_t mb_count = 0;
-  void **regions;
+int allocate_with_mmap(void) {
+  int mb_count = 0;
+  size_t total_allocated = 0;
+  void *ptr = NULL;
 
   struct rusage usage_start, usage_end;
   struct timeval sys_start, sys_end, usr_start, usr_end;
   double sys_time, usr_time;
-
-  /* Pieņemam, ka nepārsniegsim 100 000 MB */
-  regions = (void **)malloc(100000 * sizeof(void *)); 
 
   getrusage(RUSAGE_SELF, &usage_start);
   usr_start = usage_start.ru_utime;
   sys_start = usage_start.ru_stime;
   
   while (1) {
-    regions[mb_count] = mmap(NULL, MB, PROT_READ | PROT_WRITE, 
-                            MAP_PRIVATE | MAP_ANON, -1, 0);
-
-    /* Pie rezervētiem 100 MB saskaitam laiku */
     if (mb_count == 100) {
       getrusage(RUSAGE_SELF, &usage_end);
       usr_end = usage_end.ru_utime;
       sys_end = usage_end.ru_stime;
-      usr_time = (usr_end.tv_sec - usr_start.tv_sec) +
-                (usr_end.tv_usec - usr_start.tv_usec) / 1000000.0;
-      sys_time = (sys_end.tv_sec - sys_start.tv_sec) +
-                (sys_end.tv_usec - sys_start.tv_usec) / 1000000.0;
+      usr_time =  (usr_end.tv_sec - usr_start.tv_sec) +
+                  (usr_end.tv_usec - usr_start.tv_usec) / 1000000.0;
+      sys_time =  (sys_end.tv_sec - sys_start.tv_sec) +
+                  (sys_end.tv_usec - sys_start.tv_usec) / 1000000.0;
       printf("--------------------------------\n");    
       printf("100 MB rezervēšana ar mmap:\n");            
       printf("Sistēmas laiks: %.6f sekundes\n", sys_time);
@@ -186,132 +138,89 @@ void allocate_with_mmap2() {
       printf("--------------------------------\n");    
     }
 
-
-    memset(regions[mb_count], 1, MB);
-    
-    mb_count++;
-    
-    /* Ik pa laikam izvadām statusu */
-    if (mb_count % 1000 == 0 || mb_count % 10 == 0 && mb_count > 2200) {
-      printf("Veiksmīgi rezervēts %lu MB\n", (unsigned long)mb_count);
+    /* Rezervē atmiņu mb_count MB. Pirmais solis 0 MB, otrais 1 MB, utt. */
+    ptr = mmap(NULL, total_allocated + MB, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+    /* Ja vairs nevar rezervēt atmiņu, tad ir atrasta robeža un izejam no while(1) cikla */
+    if (ptr == MAP_FAILED) {
+      break;
     }
+    total_allocated += MB;
+    mb_count++;
+    /* Atbrīvojam atmiņu nākošajam solim*/
+    munmap(ptr, total_allocated);
   }
   
-  /* Atbrīvojam atmiņu, lai varētu testēt nākamo metodi 
-  while (mb_count > 0) {
-    mb_count--;
-    munmap(regions[mb_count], MB);
-  }
-  free(regions); */
+  return mb_count;
 }
 
 /* Funkcija atmiņas rezervēšanai ar sbrk() */
-void allocate_with_sbrk2(void) {
-    size_t mb_count = 0;
-    void **chunks;
-    char *heap_ptr; /* Izmantosim char* adreses reprezentēšanai */
-
-    struct rusage usage_start, usage_end;
-    struct timeval sys_start, sys_end, usr_start, usr_end;
-    double sys_time, usr_time;
-
-    /* Pieņemam, ka nepārsniegsim 100 000 MB */
-    chunks = (void **)malloc(100000 * sizeof(void *));
-    if (chunks == NULL) {
-        printf("Neizdevās alocēt masīvu norādēm!\n");
-        return;
-    }
-
-    getrusage(RUSAGE_SELF, &usage_start);
-    usr_start = usage_start.ru_utime;
-    sys_start = usage_start.ru_stime;
-
-    while (1) {
-        /* Izmantojam pagaidu mainīgo, lai nemodificētu tiešo sbrk() atgriešanas vērtību */
-        heap_ptr = (char *)sbrk(0);
-        if (heap_ptr == (char *)(-1)) {
-            printf("Kļūda iegūstot pašreizējo heap adresi\n");
-            break;
-        }
-
-        chunks[mb_count] = heap_ptr;
-
-        /* Palielinam heap izmēru par MB (1 megabaitu) */
-        if (sbrk(MB) == -1) {
-            printf("Sasniegts sbrk() limits pēc %lu MB\n", (unsigned long)mb_count);
-            break;
-        }
-
-        /* Pie rezervētiem 100 MB saskaitam laiku */
-        if (mb_count == 100) {
-            getrusage(RUSAGE_SELF, &usage_end);
-            usr_end = usage_end.ru_utime;
-            sys_end = usage_end.ru_stime;
-            usr_time = (usr_end.tv_sec - usr_start.tv_sec) +
-                       (usr_end.tv_usec - usr_start.tv_usec) / 1000000.0;
-            sys_time = (sys_end.tv_sec - sys_start.tv_sec) +
-                       (sys_end.tv_usec - sys_start.tv_usec) / 1000000.0;
-            printf("--------------------------------\n");
-            printf("100 MB rezervēšana ar sbrk:\n");
-            printf("Sistēmas laiks: %.6f sekundes\n", sys_time);
-            printf("Lietotāja laiks: %.6f sekundes\n", usr_time);
-            printf("Kopējais laiks: %.6f sekundes\n", sys_time + usr_time);
-            printf("--------------------------------\n");
-        }
-
-        memset(heap_ptr, 1, MB);
-
-        mb_count++;
-
-        /* Ik pa laikam izvadām statusu */
-        if (mb_count % 1000 == 0 || (mb_count % 10 == 0 && mb_count > 2200)) {
-            printf("Veiksmīgi rezervēts %lu MB\n", (unsigned long)mb_count);
-        }
-    }
-
-    printf("Ar sbrk() maksimāli rezervēti: %lu MB\n", (unsigned long)mb_count);
-
-    /* Atbrīvojam atmiņu - ar sbrk() to var izdarīt tikai atgriežot brk atpakaļ */
-    sbrk(-(MB * mb_count));
-    free(chunks);
-}
-
-
-
-
-
-void allocate_with_sbrk() {
-  size_t block_size = MB;
-  void *ptr;
+int allocate_with_sbrk(void) {
+  void *ptr = sbrk(0);
   int mb_count = 0;
+
+  struct rusage usage_start, usage_end;
+  struct timeval sys_start, sys_end, usr_start, usr_end;
+  double sys_time, usr_time;
+
+  getrusage(RUSAGE_SELF, &usage_start);
+  usr_start = usage_start.ru_utime;
+  sys_start = usage_start.ru_stime;
+
   while (1) {
+    if (mb_count == 100) {
+      getrusage(RUSAGE_SELF, &usage_end);
+      usr_end = usage_end.ru_utime;
+      sys_end = usage_end.ru_stime;
+      usr_time =  (usr_end.tv_sec - usr_start.tv_sec) +
+                  (usr_end.tv_usec - usr_start.tv_usec) / 1000000.0;
+      sys_time =  (sys_end.tv_sec - sys_start.tv_sec) +
+                  (sys_end.tv_usec - sys_start.tv_usec) / 1000000.0;
+      printf("--------------------------------\n");
+      printf("100 MB rezervēšana ar sbrk:\n");
+      printf("Sistēmas laiks: %.6f sekundes\n", sys_time);
+      printf("Lietotāja laiks: %.6f sekundes\n", usr_time);
+      printf("Kopējais laiks: %.6f sekundes\n", sys_time + usr_time);
+      printf("--------------------------------\n");
+    }
 
-    mb_count++;
-    ptr = sbrk(block_size);
-
-    if (ptr == (void *)-1) {
-      printf("Sasniegts sbrk() limits pēc %lu MB\n", (unsigned long)mb_count);
+    if ( sbrk(MB) == (void *)-1 ) {
       break;
     }
-    if (mb_count % 1000000 == 0 ) {
-      printf("Veiksmīgi rezervēts %lu MB\n", (unsigned long)mb_count);
-    }
-    
+    mb_count++;
+  }
 
-  };
+  sbrk(0);
+  return mb_count;
 }
-
 
 /* Galvenā funkcija */
 int main() {
-  /* printf("1. eksperiments. Rezervēju atmiņu ar malloc()...\n");
-  allocate_with_malloc();
+  struct rusage usage_start, usage_end;
+  struct timeval sys_start, sys_end, usr_start, usr_end;
+  double sys_time, usr_time;
+
+  printf("1. eksperiments. Rezervēju atmiņu ar malloc()...\n");
+  printf("Veiksmīgi rezervēts %lu MB\n", (long unsigned)allocate_with_malloc());
 
   printf("2. eksperiments. Rezervēju atmiņu ar mmap()...\n");
-  allocate_with_mmap();
-*/
+  printf("Veiksmīgi rezervēts %lu MB\n", (long unsigned)allocate_with_mmap());
+
   printf("3. eksperiments. Rezervēju atmiņu ar sbrk()...\n");
-  allocate_with_sbrk();
-  
+  printf("Veiksmīgi rezervēts %lu MB\n", (long unsigned)allocate_with_sbrk());
+
+  getrusage(RUSAGE_SELF, &usage_end);
+  usr_end = usage_end.ru_utime;
+  sys_end = usage_end.ru_stime;
+  usr_time =  (usr_end.tv_sec - usr_start.tv_sec) +
+              (usr_end.tv_usec - usr_start.tv_usec) / 1000000.0;
+  sys_time =  (sys_end.tv_sec - sys_start.tv_sec) +
+              (sys_end.tv_usec - sys_start.tv_usec) / 1000000.0;
+  printf("================================\n");    
+  printf("Programmas izpildes laiks:\n");            
+  printf("Sistēmas laiks: %.6f sekundes\n", sys_time);
+  printf("Lietotāja laiks: %.6f sekundes\n", usr_time);
+  printf("Kopējais laiks: %.6f sekundes\n", sys_time + usr_time);
+  printf("================================\n");  
+
   return 0;
 }
