@@ -1,0 +1,197 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[latvian]{babel}
+\usepackage{minted}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{geometry}
+
+
+\geometry{a4paper, margin=2.5cm}
+
+
+\title{LU-LSP-b:L07 - PD\_Heap}
+\author{Agris Pudāns,  st. apl. nr. ap08426}
+\date{date}
+
+\begin{document}
+	
+	\maketitle
+	
+	\section{Ievads}
+	
+	Šajā dokumentā tiek analizēta vienkārša dinamiskās atmiņas izdalīšanas sistēma, kas izmanto NextFit algoritmu. Mērķis ir noteikt tās veiktspēju dažādos scenārijos.
+	
+	Piedāvātais kods implementē vienkāršu atmiņas izdalīšanas mehānismu, izmantojot NextFit algoritmu. Tas darbojas ar fiksēta izmēra buferi, kura lielums ir 4096 baiti.
+	
+	\subsection{Algoritma pamatelementi}
+	
+	\begin{minted}[linenos, breaklines, fontsize=\small, autogobble]{c}
+		#define MY_BUFFER_SIZE 4096
+		
+		unsigned char mybuffer[MY_BUFFER_SIZE];
+		size_t next_fit_index = 0;
+	\end{minted}
+	
+	\subsection{Atmiņas izdalīšanas funkcija}
+	
+	\begin{minted}[linenos, breaklines, fontsize=\small, autogobble]{c}
+		void *myalloc(size_t size) {
+			size_t start_index;
+			size_t free_space;
+			size_t alloc_start;
+			size_t i;
+			
+			if (size == 0 || size > MY_BUFFER_SIZE) {
+				return NULL;
+			}
+			
+			start_index = next_fit_index;
+			free_space = 0;
+			
+			while (free_space < size) {
+				if (mybuffer[next_fit_index] == 0) {
+					free_space++;
+				} else {
+					free_space = 0;
+				}
+				
+				next_fit_index = (next_fit_index + 1) % MY_BUFFER_SIZE;
+				
+				if (next_fit_index == start_index) {
+					return NULL;
+				}
+			}
+			
+			alloc_start = (next_fit_index + MY_BUFFER_SIZE - free_space) % MY_BUFFER_SIZE;
+			for (i = 0; i < size; i++) {
+				mybuffer[alloc_start + i] = 1;
+			}
+			
+			next_fit_index = (alloc_start + size) % MY_BUFFER_SIZE;
+			return &mybuffer[alloc_start];
+		}
+	\end{minted}
+	
+	Atmiņas izdalīšanas funkcija \texttt{myalloc} darbojas šādi:
+	
+	\begin{enumerate}
+		\item Pārbauda, vai pieprasītais izmērs ir derīgs, t.i., nav 0 un nepārsniedz bufera lielumu.
+		\item Sāk meklēšanu no pašreizējās \texttt{next\_fit\_index} pozīcijas.
+		\item Meklē pietiekami lielu brīvu atmiņas bloku.
+		\item Ja atrasts pietiekami liels bloks, tad atzīmē to kā aizņemtu un atgriež norādi uz tā sākumu.
+		\item Ja visa atmiņa ir pārmeklēta un pietiekami liels bloks nav atrasts, atgriež NULL.
+	\end{enumerate}
+	
+	\subsection{Atmiņas atbrīvošanas funkcija}
+	
+	\begin{minted}[linenos, breaklines, fontsize=\small, autogobble]{c}
+		int myfree(void *ptr) {
+			unsigned char *byte_ptr;
+			
+			if (ptr == NULL || ptr < (void *)mybuffer || ptr >= (void *)(mybuffer + MY_BUFFER_SIZE)) {
+				return -1;
+			}
+			
+			byte_ptr = (unsigned char *)ptr;
+			while (byte_ptr < mybuffer + MY_BUFFER_SIZE && *byte_ptr == 1) {
+				*byte_ptr = 0;
+				byte_ptr++;
+			}
+			
+			return 0;
+		}
+	\end{minted}
+	
+	Atmiņas atbrīvošanas funkcija \texttt{myfree} darbojas šādi:
+	
+	\begin{enumerate}
+		\item Pārbauda, vai ievades norāde ir derīga, t.i., nav NULL un atrodas bufera robežās.
+		\item Atbrīvo visus aizņemtos baitus sākot no norādītās adreses atzīmējot tos kā brīvus.
+		\item Atgriež 0, ja atbrīvošana bija veiksmīga, vai -1 kļūdas gadījumā.
+	\end{enumerate}
+	
+	\section{Veiktspējas novērtējums}
+	
+	\subsection{Testa gadījumi}
+	
+	Koda veiktspēja ir testēta ar šādiem testa gadījumiem, kur kā argumentu nodod atmiņas lielumu baitos:
+	
+	\begin{minted}[linenos, breaklines, fontsize=\small, autogobble]{c}
+		int main() {
+			test_case(64);
+			test_case(128);
+			test_case(512);
+			test_case(1024);
+			test_case(2048); 
+			test_case(3072); 
+			test_case(4000); 
+			test_case(4096); 
+			return 0;
+		}
+	\end{minted}
+	
+	Katrs testa gadījums mēra laiku, kas nepieciešams, lai izdalītu un atbrīvotu noteikta izmēra atmiņas bloku. Katram gadījumam atmiņas atbrīvošana aizņem vienādu laiku. Tāpēc tās uzskaite neietekmē ātrdarbības atšķirību novērtēšanu.
+	
+	\subsection{Izmantotās metrikas}
+	
+	Veiktspējas novērtēšanai tiek izmantoti šādi mērījumi:
+	
+	\begin{itemize}
+		\item Sistēmas laiks (system time) - laiks, ko sistēma patērē I/O operācijām un citām sistēmas darbībām.
+		\item Lietotāja laiks (user time) - laiks, ko procesors patērē, izpildot lietotāja funkcijas (mūsu kodu).
+		\item Kopējais laiks - sistēmas un lietotāja laika summa.
+	\end{itemize}
+	
+	Sistēmas laiks visur ir vienāds, 0s, tāpēc var uzskaitīt tikai lietotāja laiku, kas ir vienāds arī ar kopējo laiku.
+	
+	\subsection{Rezultāti}
+	
+	Iegūtie veiktspējas rezultāti:
+	
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{@{}rrrr@{}}
+			\toprule
+			\textbf{Izmērs (baiti)} & \textbf{Lietotāja laiks (s)} & \textbf{Sistēmas laiks (s)} & \textbf{Kopējais laiks (s)} \\
+			\midrule
+			64 & 0,000503 & 0,000000 & 0,000503 \\
+			128 & 0,000543 & 0,000000 & 0,000543 \\
+			512 & 0,000580 & 0,000000 & 0,000580 \\
+			1024 & 0,000620 & 0,000000 & 0,000620 \\
+			2048 & 0,000666 & 0,000000 & 0,000666 \\
+			3072 & 0,000713 & 0,000000 & 0,000713 \\
+			4000 & 0,000766 & 0,000000 & 0,000766 \\
+			4096 & 0,000807 & 0,000000 & 0,000807 \\
+			\bottomrule
+		\end{tabular}
+		\caption{ Atmiņas izdalīšanas un atbrīvošanas operāciju izpildes laiki}
+		\label{tab:performance}
+	\end{table}
+	
+	Var redzēt, ka jo lielāks atmiņas daudzums ir jārezervē, jo vairāk tiek patērēts laiks šāda bloka meklēšanai. Saskaroties ar konstantes \texttt{MY\_BUFFER\_SIZE} noteikto limitu, iegūstam kļūdu. Kļūda nozīmē, ka nevar izdalīt atmiņu, kas ir vienāda vai lielāka par doto konstanti.
+	
+	\subsection{Papildu testa gadījumi}
+	
+	Lai pilnvērtīgāk novērtētu atmiņas izdalītāja veiktspēju, var veikt arī šādus papildu testus:
+
+	\begin{itemize}
+		\item Fragmentācijas tests, lai novērtētu, kā algoritms tiek galā ar atmiņas fragmentāciju.
+		\item Slodzes tests, kas novērtē algoritma veiktspēju intensīvos lietošanas apstākļos.
+		\item Kopējais laiks - sistēmas un lietotāja laika summa.
+	\end{itemize}
+
+	\section{Secinājumi}
+	
+	Analizētais dinamiskās atmiņas izdalītājs ar NextFit algoritmu nodrošina vienkāršu un saprotamu atmiņas pārvaldību. Tomēr tā veiktspēja un efektivitāte ir atkarīga no atmiņas lietošanas scenārija. Tas ir vienkāršs un viegli saprotams, bet atmiņas izmantošana ir neefektīva, jo katru baitu atzīmē atsevišķi. Tāpat teorētiskā laika sarežģītība ir atkarīga no atmiņas izmēra ($n$) un operāciju skaita ($m$):
+	\begin{itemize}
+		\item \texttt{myalloc}: $O(n)$ sliktākajā gadījumā (kad jāmeklē cauri visam buferim).
+		\item \texttt{myfree}: $O(k)$, kur $k$ ir atbrīvojamā bloka izmērs.
+	\end{itemize}
+
+\end{document}
