@@ -1,0 +1,45 @@
+#include <setjmp.h>
+#include <signal.h>
+#include <stdio.h>
+#include <unistd.h>
+
+// globalā mainīgā deklarācija setjmp() un longjmp() izmantošanai
+static jmp_buf jump_buffer;
+
+// Signāla apstrādātājs
+void signal_handler(int sig) {
+    // Atgriezties uz vietu, kuru norādījusi setjmp
+    longjmp(jump_buffer, 1);
+}
+
+int main(void)
+{
+    // Piestiprināt signāla apstrādātāju taimera signālam (SIGALRM)
+    struct sigaction sa;
+    sa.sa_handler = signal_handler;   // iestatām apstrādātāju
+    sigemptyset(&sa.sa_mask);         // nepieņemam citus signālus
+    sa.sa_flags = 0;
+
+    // Reģistrējam signāla apstrādātāju
+    sigaction(SIGALRM, &sa, NULL);
+
+    // Izsistam setjmp, lai iestatītu atgriešanās punktu
+    if (setjmp(jump_buffer) == 0) {
+        // Pēc setjmp atgriešanās 1. reizes programma turpinās
+        printf("Programma gaida signālu...\n");
+    } else {
+        // Ja longjmp ir izsists, tad šeit programma atgriezīsies
+        printf("Beidzam programmu pēc taimera signāla!\n");
+        return 0;  // Pabeidzam darbu
+    }
+
+    // Tālāk programma darbojas, līdz tiek saņemts taimera signāls
+    alarm(3);  // iestata taimera signālu pēc 3 sekundēm
+
+    // Bezgalīgs cikls, kas gaida signālu
+    while (1);
+
+    // Atgriež kaut kādu nenulles kodu, lai kompilators nesūdzētos
+    return -1;
+}
+
